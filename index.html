@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Raju Rangila</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Telegram theme colors apne aap aate hain (light/dark), ye sirf fallback hain */
+      --bg:       var(--tg-theme-secondary-bg-color, #f2f3f7);
+      --card:     var(--tg-theme-bg-color, #ffffff);
+      --text:     var(--tg-theme-text-color, #0f1419);
+      --muted:    var(--tg-theme-hint-color, #6b7280);
+      --accent:   var(--tg-theme-button-color, #2f80ed);
+      --accent-t: var(--tg-theme-button-text-color, #ffffff);
+      --line:     rgba(128, 128, 128, 0.17);
+      --soft:     rgba(128, 128, 128, 0.09);
+      --x:        #3d7bfa;
+      --o:        #f0567a;
+      --win:      #f5b82e;
+      --radius:   18px;
+      --safe-top:    calc(var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px));
+      --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--tg-safe-area-inset-bottom, 0px));
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { background: var(--bg); }
+    body {
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.4;
+      min-height: 100vh;
+      padding-bottom: calc(24px + var(--safe-bottom));
+      overscroll-behavior: none;
+    }
+    body.locked { overflow: hidden; }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; text-align: inherit; }
+    input { font: inherit; color: inherit; }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 0 14px; }
+
+    /* ---------- Avatars ---------- */
+    .avatar {
+      flex: none; border-radius: 50%; overflow: hidden;
+      display: grid; place-items: center;
+      color: #fff; font-weight: 800; text-transform: uppercase;
+      background: #8a94a6;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .av-40 { width: 40px; height: 40px; font-size: 15px; }
+    .av-48 { width: 48px; height: 48px; font-size: 17px; }
+    .av-30 { width: 30px; height: 30px; font-size: 12px; }
+
+    /* ---------- Welcome bar ---------- */
+    .topbar {
+      position: sticky; top: 0; z-index: 20;
+      background: var(--bg);
+      padding: calc(12px + var(--safe-top)) 0 10px;
+    }
+    .me { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .hello { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+    .me-name { font-weight: 800; font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ---------- Cards ---------- */
+    .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--line); }
+
+    /* ---------- Profile (Instagram style) ---------- */
+    .profile { padding: 18px; margin-top: 4px; }
+    .ig-top { display: flex; align-items: center; gap: 18px; }
+    .ring {
+      flex: none; padding: 3px; border-radius: 50%;
+      background: conic-gradient(from 210deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34);
+    }
+    .ring img {
+      width: 84px; height: 84px; border-radius: 50%; object-fit: cover; display: block;
+      border: 3px solid var(--card); background: var(--soft);
+    }
+    .ig-stats { flex: 1; display: grid; grid-template-columns: 1fr 1fr; text-align: center; }
+    .ig-stat { padding: 6px 0; border-radius: 12px; text-align: center; }
+    .ig-stat b { display: block; font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .ig-stat span { font-size: 13px; color: var(--muted); font-weight: 600; }
+    button.ig-stat:active { background: var(--soft); }
+    .name-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+    .name-row h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.2px; }
+    .pill {
+      font-size: 10.5px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+      color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent);
+      padding: 3px 8px; border-radius: 999px;
+    }
+    .handle { color: var(--muted); font-size: 13.5px; font-weight: 600; }
+    .bio { margin-top: 8px; font-size: 14.5px; }
+    .bio span { color: var(--muted); }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+
+    .btn {
+      height: 40px; border-radius: 11px; font-weight: 700; font-size: 14px;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      transition: transform .1s ease, opacity .15s ease;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn.primary { background: var(--accent); color: var(--accent-t); }
+    .btn.ghost { background: var(--soft); }
+    .btn.block { width: 100%; height: 46px; font-size: 15px; }
+
+    /* ---------- Bank Balance ---------- */
+    .bank {
+      margin-top: 12px; padding: 18px 20px; border: 0; color: #f6e2b8;
+      background: linear-gradient(135deg, #241a12 0%, #5b3f22 100%);
+      position: relative; overflow: hidden;
+    }
+    .bank::before {
+      content: ""; position: absolute; right: -50px; top: -60px; width: 190px; height: 190px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(246, 226, 184, .22), transparent 70%);
+    }
+    .bank::after {
+      content: ""; position: absolute; left: 20px; right: 20px; bottom: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(246,226,184,.35), transparent);
+    }
+    .bank-top { display: flex; justify-content: space-between; font-size: 11.5px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; opacity: .8; }
+    .bank-amount { margin-top: 12px; font-size: 34px; font-weight: 800; letter-spacing: -0.6px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+    .bank-amount small { font-size: 14px; font-weight: 700; opacity: .75; margin-left: 6px; letter-spacing: 0; }
+
+    /* ---------- Home rows ---------- */
+    .row-link { width: 100%; display: flex; align-items: center; gap: 14px; padding: 14px 16px; margin-top: 12px; }
+    .row-link:active { background: var(--soft); }
+    .rl-text { flex: 1; min-width: 0; }
+    .rl-text b { display: block; font-size: 15px; font-weight: 800; }
+    .rl-text span { display: block; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chev { width: 9px; height: 9px; border-right: 2px solid var(--muted); border-top: 2px solid var(--muted); transform: rotate(45deg); flex: none; margin-right: 4px; }
+
+    .stack { display: flex; flex: none; padding-left: 10px; }
+    .stack .avatar { margin-left: -10px; border: 2px solid var(--card); }
+    .stack:empty { display: none; }
+
+    .mini-board {
+      flex: none; display: grid; grid-template-columns: repeat(3, 14px); gap: 3px;
+      padding: 6px; border-radius: 12px; background: var(--soft);
+    }
+    .mini-board i { width: 14px; height: 14px; border-radius: 4px; background: var(--card); font-style: normal; font-size: 10px; font-weight: 800; display: grid; place-items: center; }
+    .mini-board .x { color: var(--x); }
+    .mini-board .o { color: var(--o); }
+    .play-btn { padding: 0 18px; height: 36px; flex: none; }
+
+    .notice { margin-top: 12px; padding: 12px 14px; font-size: 13px; color: var(--muted); text-align: center; }
+    .notice[hidden] { display: none; }
+
+    /* ---------- Fullscreen sheets ---------- */
+    .sheet {
+      position: fixed; inset: 0; z-index: 40;
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      transform: translateX(100%);
+      visibility: hidden;
+      transition: transform .3s cubic-bezier(.22, 1, .36, 1), visibility 0s linear .3s;
+    }
+    .sheet.open { transform: none; visibility: visible; transition: transform .3s cubic-bezier(.22, 1, .36, 1), visibility 0s; }
+    .sheet-head {
+      flex: none; display: flex; align-items: center; gap: 6px;
+      padding: calc(8px + var(--safe-top)) 10px 8px;
+      background: var(--card); border-bottom: 1px solid var(--line);
+    }
+    .back { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+    .back:active { background: var(--soft); }
+    .back i { width: 11px; height: 11px; border-left: 2.5px solid var(--text); border-bottom: 2.5px solid var(--text); transform: rotate(45deg); margin-left: 4px; }
+    .sheet-title h2 { font-size: 16.5px; font-weight: 800; line-height: 1.2; }
+    .sheet-title span { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+
+    /* Followers sheet */
+    .sheet-search { flex: none; padding: 10px 14px; background: var(--card); }
+    .search {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--soft); border-radius: 12px; padding: 0 12px; height: 42px;
+    }
+    .search .lens { width: 14px; height: 14px; border: 2px solid var(--muted); border-radius: 50%; position: relative; flex: none; }
+    .search .lens::after { content: ""; position: absolute; width: 2px; height: 6px; background: var(--muted); right: -4px; bottom: -5px; transform: rotate(-45deg); border-radius: 2px; }
+    .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 15px; font-weight: 600; }
+    .search input::placeholder { color: var(--muted); font-weight: 500; }
+    .search input::-webkit-search-cancel-button { display: none; }
+    .clear { color: var(--muted); font-size: 13px; font-weight: 700; padding: 6px 2px; }
+    .sheet-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(16px + var(--safe-bottom)); background: var(--card); }
+    .row { display: flex; align-items: center; gap: 12px; padding: 9px 16px; }
+    .row.me-row { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+    .info { flex: 1; min-width: 0; }
+    .nm { font-weight: 800; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tag { flex: none; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 9px; background: var(--soft); }
+    .tag.you { background: var(--accent); color: var(--accent-t); }
+    .empty { padding: 48px 20px; text-align: center; color: var(--muted); font-size: 14px; }
+    .list-label { padding: 14px 16px 6px; font-size: 13px; font-weight: 800; }
+    .sk { background: linear-gradient(90deg, var(--soft) 25%, rgba(128,128,128,.17) 37%, var(--soft) 63%); background-size: 400% 100%; animation: sk 1.3s infinite; border-radius: 8px; }
+    @keyframes sk { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+    /* Game sheet */
+    .game-body {
+      flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px;
+      padding: 16px 16px calc(16px + var(--safe-bottom));
+      max-width: 520px; width: 100%; margin: 0 auto;
+    }
+    .game-header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 6px 0; }
+    .chip { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
+    .chip.opp { flex-direction: row-reverse; text-align: right; }
+    .chip .avatar, .chip .raju { transition: box-shadow .25s ease, transform .25s ease; }
+    .chip .raju { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; }
+    .chip.active .avatar, .chip.active .raju {
+      box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent);
+      transform: scale(1.06);
+    }
+    .chip-name { font-weight: 800; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chip-mark { font-size: 12px; font-weight: 800; }
+    .chip-mark.x { color: var(--x); }
+    .chip-mark.o { color: var(--o); }
+    .vs { flex: none; text-align: center; font-size: 11px; font-weight: 800; color: var(--muted); letter-spacing: 1px; }
+    .vs b { display: block; font-size: 18px; color: var(--text); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+
+    .turn {
+      flex: none; margin: 0 auto; padding: 5px 14px; border-radius: 999px;
+      font-weight: 800; font-size: 13.5px; color: var(--muted); min-height: 28px;
+      transition: color .2s ease, background .2s ease;
+    }
+    .turn.mine { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); animation: glow 1.6s ease-in-out infinite; }
+    @keyframes glow { 0%,100% { box-shadow: 0 0 0 transparent; } 50% { box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 40%, transparent); } }
+
+    .board-area { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
+    .board {
+      display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+      gap: min(2.6vmin, 10px);
+      height: 100%; width: auto; aspect-ratio: 1 / 1;
+      max-width: min(92vw, 400px); max-height: min(92vw, 400px);
+      transition: opacity .25s ease;
+    }
+    .board.waiting { opacity: .75; }
+    .cell {
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+      font-size: clamp(28px, 11vmin, 54px); font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      min-width: 0; min-height: 0; text-align: center;
+    }
+    .cell:not(.filled):active { background: var(--soft); border-color: var(--accent); transform: scale(.96); transition: all .08s ease; }
+    .cell.mark-x { color: var(--x); animation: press .34s cubic-bezier(.16, 1, .3, 1); }
+    .cell.mark-o { color: var(--o); animation: press .34s cubic-bezier(.16, 1, .3, 1); }
+    @keyframes press {
+      0%   { transform: scale(.88); box-shadow: inset 0 0 0 2px currentColor; }
+      40%  { transform: scale(.94); }
+      100% { transform: scale(1); box-shadow: inset 0 0 0 0 transparent; }
+    }
+    .cell.win-cell { background: color-mix(in srgb, var(--win) 20%, var(--card)); border-color: var(--win); animation: winPulse .9s ease-in-out infinite; }
+    @keyframes winPulse { 0%,100% { box-shadow: 0 0 0 transparent; } 50% { box-shadow: 0 0 22px color-mix(in srgb, var(--win) 60%, transparent); } }
+
+    .game-foot { flex: none; display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .game-note { text-align: center; font-size: 12px; color: var(--muted); font-weight: 600; }
+
+    /* ---------- Result modal ---------- */
+    .overlay {
+      position: fixed; inset: 0; z-index: 60; padding: 24px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(8, 10, 18, .55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    }
+    .overlay[hidden] { display: none; }
+    .modal {
+      width: 100%; max-width: 320px; text-align: center;
+      background: var(--card); border-radius: 22px; padding: 26px 22px 20px;
+      animation: modalIn .32s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(.86) translateY(10px); } to { opacity: 1; transform: none; } }
+    .result-mark {
+      width: 68px; height: 68px; margin: 0 auto 12px; border-radius: 20px;
+      display: grid; place-items: center; font-size: 34px; font-weight: 800;
+      background: var(--soft);
+    }
+    .result-mark.x { color: var(--x); background: color-mix(in srgb, var(--x) 13%, transparent); }
+    .result-mark.o { color: var(--o); background: color-mix(in srgb, var(--o) 13%, transparent); }
+    .result-mark.d { color: var(--muted); }
+    .modal h3 { font-size: 20px; font-weight: 800; }
+    .modal p { color: var(--muted); font-size: 13.5px; margin: 4px 0 18px; }
+    .modal .btn + .btn { margin-top: 8px; }
+
+    .toast {
+      position: fixed; left: 50%; bottom: calc(22px + var(--safe-bottom)); transform: translate(-50%, 16px);
+      background: #15171f; color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+      opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 80; max-width: 88%; text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-height: 560px) { .game-header { display: none; } }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Welcome bar ===== -->
+  <header class="topbar">
+    <div class="wrap">
+      <div class="me">
+        <div class="avatar av-40" id="meAvatar"></div>
+        <div style="min-width:0">
+          <div class="hello" id="greeting">Welcome</div>
+          <div class="me-name" id="meName">Guest</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ===== Profile ===== -->
+    <section class="card profile">
+      <div class="ig-top">
+        <div class="ring"><img src="raju.jpg" alt="Raju Rangila"></div>
+        <div class="ig-stats">
+          <div class="ig-stat"><b id="statShayari">0</b><span>Shayari</span></div>
+          <button class="ig-stat" id="statFollowersBtn"><b id="statFollowers">0</b><span>Followers</span></button>
+        </div>
+      </div>
+      <div class="name-row">
+        <h1>Raju Rangila</h1>
+        <span class="pill">Creator</span>
+      </div>
+      <div class="handle" id="profileHandle">@RajuRangilaBot</div>
+      <p class="bio">
+        Shayar · Dil ki baat, alfaazon mein.<br>
+        <span>Mohabbat, attitude aur thodi si rangeeniyat.</span>
+      </p>
+      <div class="actions">
+        <button class="btn primary" id="followBtn">Following</button>
+        <button class="btn ghost" id="messageBtn">Message</button>
+      </div>
+    </section>
+
+    <!-- ===== Bank Balance ===== -->
+    <section class="card bank">
+      <div class="bank-top"><span>Bank Balance</span><span>Raju Rangila</span></div>
+      <div class="bank-amount"><span id="bankAmount">0</span><small>coins</small></div>
+    </section>
+
+    <div class="card notice" id="notice" hidden></div>
+
+    <!-- ===== Followers row ===== -->
+    <button class="card row-link" id="openFollowers">
+      <div class="stack" id="avatarStack"></div>
+      <div class="rl-text">
+        <b>Followers</b>
+        <span id="followersPreview">Load ho rahe hain...</span>
+      </div>
+      <i class="chev"></i>
+    </button>
+
+    <!-- ===== Play row ===== -->
+    <div class="card row-link" id="playRow" role="button">
+      <div class="mini-board" aria-hidden="true">
+        <i class="x">X</i><i class="o">O</i><i></i>
+        <i></i><i class="x">X</i><i class="o">O</i>
+        <i class="o">O</i><i></i><i class="x">X</i>
+      </div>
+      <div class="rl-text">
+        <b>Play Tic Tac Toe</b>
+        <span>Raju Rangila ke saath ek match</span>
+      </div>
+      <button class="btn primary play-btn" id="openGame">Play</button>
+    </div>
+
+  </main>
+
+  <!-- ===== Followers (fullscreen) ===== -->
+  <section class="sheet" id="sheetFollowers" aria-hidden="true">
+    <header class="sheet-head">
+      <button class="back" data-close aria-label="Back"><i></i></button>
+      <div class="sheet-title">
+        <h2>Followers</h2>
+        <span id="followersCount">0 followers</span>
+      </div>
+    </header>
+    <div class="sheet-search">
+      <label class="search">
+        <span class="lens"></span>
+        <input id="searchInput" type="search" placeholder="Search" autocomplete="off" enterkeyhint="search">
+        <button class="clear" id="clearSearch" hidden>Clear</button>
+      </label>
+    </div>
+    <div class="sheet-body">
+      <div class="list-label" id="listLabel">Sabhi followers</div>
+      <div id="followerList"></div>
+    </div>
+  </section>
+
+  <!-- ===== Tic Tac Toe (fullscreen) ===== -->
+  <section class="sheet" id="sheetGame" aria-hidden="true">
+    <header class="sheet-head">
+      <button class="back" data-close aria-label="Back"><i></i></button>
+      <div class="sheet-title">
+        <h2>Tic Tac Toe</h2>
+        <span>Aap vs Raju Rangila</span>
+      </div>
+    </header>
+    <div class="game-body">
+      <div class="game-header">
+        <div class="chip me active" id="chipMe">
+          <div class="avatar av-40" id="youAvatar"></div>
+          <div style="min-width:0">
+            <div class="chip-name">You</div>
+            <div class="chip-mark x">X</div>
+          </div>
+        </div>
+        <div class="vs"><b id="scoreLine">0 : 0</b>VS</div>
+        <div class="chip opp" id="chipRaju">
+          <img class="raju" src="raju.jpg" alt="">
+          <div style="min-width:0">
+            <div class="chip-name">Raju</div>
+            <div class="chip-mark o">O</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="turn mine" id="turn">Aapki baari</div>
+
+      <div class="board-area">
+        <div class="board" id="board"></div>
+      </div>
+
+      <div class="game-foot">
+        <button class="btn ghost block" id="restartBtn">Restart Match</button>
+        <div class="game-note">Draw: <span id="scoreDraw">0</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Result ===== -->
+  <div class="overlay" id="resultModal" hidden>
+    <div class="modal">
+      <div class="result-mark" id="resultMark">X</div>
+      <h3 id="resultTitle"></h3>
+      <p id="resultSub"></p>
+      <button class="btn primary block" id="playAgainBtn">Play Again</button>
+      <button class="btn ghost block" id="backProfileBtn">Back to Profile</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* =========================================================
+       CONFIG - apne hisaab se badlein
+       ========================================================= */
+    const CONFIG = {
+      // Mini app aur Worker alag domain par hain to Worker ka URL daalein
+      // (jaise 'https://raju-rangila.yourname.workers.dev'). Same domain par ho to ''.
+      API_BASE: 'https://raju-rangila-bot.abhishekhaldkar3.workers.dev',
+      BOT_LINK: 'https://t.me/RajuRangilaBot',
+      PROFILE_HANDLE: '@RajuRangilaBot'
+    };
+
+    /* =========================================================
+       Tic Tac Toe engine (sirf browser me, network nahi)
+       ========================================================= */
+    const WIN_LINES = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    const Game = {
+      emptyBoard() { return Array(9).fill(null); },
+      evaluate(board) {
+        for (const line of WIN_LINES) {
+          const [a, b, c] = line;
+          if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+            return { winner: board[a], line, isDraw: false };
+          }
+        }
+        return { winner: null, line: null, isDraw: board.every((c) => c !== null) };
+      },
+      availableMoves(board) {
+        const moves = [];
+        board.forEach((cell, i) => { if (!cell) moves.push(i); });
+        return moves;
+      },
+      // Thoda mauka ki Raju galti kare, warna minimax kabhi haarta nahi
+      MISTAKE_CHANCE: 0.20,
+      bestMove(board, computerMark, humanMark) {
+        const moves = this.availableMoves(board);
+        if (moves.length === 9) {
+          const openings = [0, 2, 4, 6, 8];
+          return openings[Math.floor(Math.random() * openings.length)];
+        }
+        if (Math.random() < this.MISTAKE_CHANCE) {
+          return moves[Math.floor(Math.random() * moves.length)];
+        }
+        let bestScore = -Infinity;
+        let candidates = [];
+        for (const move of moves) {
+          const next = board.slice();
+          next[move] = computerMark;
+          const score = this._minimax(next, 0, false, computerMark, humanMark);
+          if (score > bestScore) { bestScore = score; candidates = [move]; }
+          else if (score === bestScore) { candidates.push(move); }
+        }
+        return candidates[Math.floor(Math.random() * candidates.length)];
+      },
+      _minimax(board, depth, isMax, cpu, human) {
+        const { winner, isDraw } = this.evaluate(board);
+        if (winner === cpu) return 10 - depth;
+        if (winner === human) return depth - 10;
+        if (isDraw) return 0;
+        let best = isMax ? -Infinity : Infinity;
+        for (const move of this.availableMoves(board)) {
+          const next = board.slice();
+          next[move] = isMax ? cpu : human;
+          const s = this._minimax(next, depth + 1, !isMax, cpu, human);
+          best = isMax ? Math.max(best, s) : Math.min(best, s);
+        }
+        return best;
+      }
+    };
+
+    /* =========================================================
+       Helpers
+       ========================================================= */
+    const tg = window.Telegram && window.Telegram.WebApp;
+    const initData = (tg && tg.initData) || '';
+    const tgUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
+
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      try { tg.setHeaderColor('secondary_bg_color'); tg.setBackgroundColor('secondary_bg_color'); } catch (e) {}
+    }
+
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => Number(n || 0).toLocaleString('en-IN');
+    const haptic = (t) => { try { tg && tg.HapticFeedback.impactOccurred(t || 'light'); } catch (e) {} };
+    const notify = (t) => { try { tg && tg.HapticFeedback.notificationOccurred(t); } catch (e) {} };
+
+    const PALETTE = ['#e17076', '#7bc862', '#e5ca77', '#65aadd', '#a695e7', '#ee7aae', '#6ec9cb', '#faa774'];
+    function colorFor(seed) {
+      let h = 0;
+      for (const ch of String(seed || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      return PALETTE[h % PALETTE.length];
+    }
+    function initials(name) {
+      const parts = String(name || '').replace(/^@/, '').trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return 'U';
+      return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
+    function fillAvatar(el, name, photoUrl) {
+      el.innerHTML = '';
+      el.style.background = colorFor(name);
+      const fallback = () => { el.innerHTML = ''; el.textContent = initials(name); };
+      if (photoUrl) {
+        const img = document.createElement('img');
+        img.alt = '';
+        img.loading = 'lazy';
+        img.referrerPolicy = 'no-referrer';
+        img.onerror = fallback;
+        img.src = photoUrl;
+        el.appendChild(img);
+      } else {
+        fallback();
+      }
+    }
+    function countUp(el, to) {
+      to = Number(to || 0);
+      const from = Number(el.dataset.v || 0);
+      el.dataset.v = to;
+      if (from === to) { el.textContent = fmt(to); return; }
+      const start = performance.now(), dur = 900;
+      (function step(t) {
+        const p = Math.min(1, (t - start) / dur);
+        el.textContent = fmt(Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      })(start);
+    }
+    let toastTimer;
+    function toast(msg) {
+      const t = $('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    }
+    async function api(path, opts) {
+      opts = opts || {};
+      const res = await fetch(CONFIG.API_BASE + path, {
+        method: opts.method || 'GET',
+        headers: { 'Content-Type': 'application/json', 'X-Init-Data': initData }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+    function greetingText() {
+      const h = new Date().getHours();
+      if (h < 12) return 'Good morning,';
+      if (h < 17) return 'Good afternoon,';
+      return 'Good evening,';
+    }
+    const displayName = (f) => f.username || f.name || 'Telegram User';
+
+    /* =========================================================
+       Fullscreen sheets (ek hi page, koi page load nahi)
+       ========================================================= */
+    const openStack = [];
+
+    function openSheet(id) {
+      const s = $(id);
+      if (s.classList.contains('open')) return;
+      s.classList.add('open');
+      s.setAttribute('aria-hidden', 'false');
+      openStack.push(id);
+      document.body.classList.add('locked');
+      if (tg) {
+        try { tg.BackButton.show(); } catch (e) {}
+        if (id === 'sheetGame') { try { tg.disableVerticalSwipes(); } catch (e) {} }
+      }
+    }
+
+    function closeTopSheet() {
+      const id = openStack.pop();
+      if (!id) return;
+      const s = $(id);
+      s.classList.remove('open');
+      s.setAttribute('aria-hidden', 'true');
+      if (id === 'sheetGame') stopGame();
+      if (!openStack.length) {
+        document.body.classList.remove('locked');
+        if (tg) { try { tg.BackButton.hide(); } catch (e) {} }
+      }
+      if (id === 'sheetGame' && tg) { try { tg.enableVerticalSwipes(); } catch (e) {} }
+    }
+
+    document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => { haptic('light'); closeTopSheet(); }));
+    if (tg) {
+      try {
+        tg.BackButton.onClick(() => {
+          if (!$('resultModal').hidden) { $('resultModal').hidden = true; }
+          closeTopSheet();
+        });
+      } catch (e) {}
+    }
+
+    /* =========================================================
+       Stats
+       ========================================================= */
+    let totalFollowers = 0;
+
+    function renderStats(stats) {
+      if (!stats) return;
+      totalFollowers = stats.totalFollowers || 0;
+      countUp($('statFollowers'), totalFollowers);
+      countUp($('statShayari'), stats.shayariCount);
+      countUp($('bankAmount'), stats.bankBalance);
+      $('followersCount').textContent = fmt(totalFollowers) + ' followers';
+    }
+
+    /* =========================================================
+       Followers
+       ========================================================= */
+    const listEl = $('followerList');
+
+    function skeleton(n) {
+      listEl.innerHTML = '';
+      for (let i = 0; i < n; i++) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML =
+          '<div class="sk" style="width:48px;height:48px;border-radius:50%;flex:none"></div>' +
+          '<div style="flex:1"><div class="sk" style="width:45%;height:13px"></div>' +
+          '<div class="sk" style="width:30%;height:11px;margin-top:8px"></div></div>';
+        listEl.appendChild(row);
+      }
+    }
+
+    function emptyState(msg) {
+      listEl.innerHTML = '';
+      const d = document.createElement('div');
+      d.className = 'empty';
+      d.textContent = msg;
+      listEl.appendChild(d);
+    }
+
+    function renderFollowers(list, isSearch) {
+      if (!list.length) {
+        emptyState(isSearch ? 'Is naam se koi follower nahi mila.' : 'Abhi tak koi follower nahi hai.');
+        return;
+      }
+      const frag = document.createDocumentFragment();
+      list.forEach((f) => {
+        const row = document.createElement('div');
+        row.className = 'row' + (f.is_me ? ' me-row' : '');
+
+        const av = document.createElement('div');
+        av.className = 'avatar av-48';
+        fillAvatar(av, f.name || f.username, f.photo_url);
+
+        const info = document.createElement('div');
+        info.className = 'info';
+        const nm = document.createElement('div');
+        nm.className = 'nm';
+        nm.textContent = displayName(f);
+        info.appendChild(nm);
+        if (f.username && f.name) {
+          const sub = document.createElement('div');
+          sub.className = 'sub';
+          sub.textContent = f.name;
+          info.appendChild(sub);
+        }
+
+        const tag = document.createElement('span');
+        tag.className = 'tag' + (f.is_me ? ' you' : '');
+        tag.textContent = f.is_me ? 'You' : 'Follower';
+
+        row.append(av, info, tag);
+        frag.appendChild(row);
+      });
+      listEl.innerHTML = '';
+      listEl.appendChild(frag);
+    }
+
+    function renderPreview(list) {
+      const stack = $('avatarStack');
+      stack.innerHTML = '';
+      list.slice(0, 3).forEach((f) => {
+        const av = document.createElement('div');
+        av.className = 'avatar av-30';
+        fillAvatar(av, f.name || f.username, f.photo_url);
+        stack.appendChild(av);
+      });
+      if (!totalFollowers) { $('followersPreview').textContent = 'Abhi koi follower nahi'; return; }
+      const names = list.slice(0, 2).map((f) => (f.is_me ? 'Aap' : displayName(f)));
+      const others = totalFollowers - names.length;
+      $('followersPreview').textContent = names.join(', ') + (others > 0 ? ' aur ' + fmt(others) + ' others' : '');
+    }
+
+    let reqSeq = 0;
+    let latestList = null;
+
+    async function loadFollowers(q) {
+      const seq = ++reqSeq;
+      const isSearch = !!q;
+      $('listLabel').textContent = isSearch ? 'Search results' : 'Sabhi followers';
+      if (isSearch || !latestList) skeleton(isSearch ? 4 : 8);
+      try {
+        const data = await api('/api/followers' + (q ? '?q=' + encodeURIComponent(q) : ''));
+        if (seq !== reqSeq) return; // purani request ka result ignore
+        renderStats(data.stats);
+        const list = data.followers || [];
+        if (!isSearch) { latestList = list; renderPreview(list); }
+        renderFollowers(list, isSearch);
+      } catch (e) {
+        if (seq !== reqSeq) return;
+        emptyState('Followers load nahi ho paye. Thodi der baad try karein.');
+        if (!isSearch) $('followersPreview').textContent = 'Load nahi ho paye';
+      }
+    }
+
+    let searchTimer;
+    $('searchInput').addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      $('clearSearch').hidden = !q;
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => loadFollowers(q), 300);
+    });
+    $('clearSearch').addEventListener('click', (e) => {
+      e.preventDefault();
+      $('searchInput').value = '';
+      $('clearSearch').hidden = true;
+      if (latestList) { reqSeq++; $('listLabel').textContent = 'Sabhi followers'; renderFollowers(latestList, false); }
+      else loadFollowers('');
+    });
+
+    function openFollowers() {
+      haptic('light');
+      if (!initData) { toast('Telegram ke andar kholein'); return; }
+      $('searchInput').value = '';
+      $('clearSearch').hidden = true;
+      $('listLabel').textContent = 'Sabhi followers';
+      if (latestList) renderFollowers(latestList, false);
+      openSheet('sheetFollowers');
+      loadFollowers('');
+    }
+    $('openFollowers').addEventListener('click', openFollowers);
+    $('statFollowersBtn').addEventListener('click', openFollowers);
+
+    /* =========================================================
+       Profile buttons
+       ========================================================= */
+    $('followBtn').addEventListener('click', () => { haptic('light'); toast('Aap Raju Rangila ko follow kar rahe hain'); });
+    $('messageBtn').addEventListener('click', () => {
+      haptic('light');
+      if (tg && tg.openTelegramLink) tg.openTelegramLink(CONFIG.BOT_LINK);
+      else window.open(CONFIG.BOT_LINK, '_blank');
+    });
+
+    /* =========================================================
+       Tic Tac Toe (fullscreen)
+       ========================================================= */
+    const boardEl = $('board');
+    const cells = [];
+    for (let i = 0; i < 9; i++) {
+      const c = document.createElement('button');
+      c.className = 'cell';
+      c.setAttribute('aria-label', 'Cell ' + (i + 1));
+      c.addEventListener('click', () => onCell(i));
+      boardEl.appendChild(c);
+      cells.push(c);
+    }
+
+    const G = { board: Game.emptyBoard(), finished: true, busy: false, timer: null };
+    const score = { you: 0, raju: 0, draw: 0 };
+
+    function setTurn(mine) {
+      $('chipMe').classList.toggle('active', mine);
+      $('chipRaju').classList.toggle('active', !mine);
+      $('turn').classList.toggle('mine', mine);
+      $('turn').textContent = mine ? 'Aapki baari' : 'Raju soch rahe hain...';
+      boardEl.classList.toggle('waiting', !mine);
+    }
+    function renderScore() {
+      $('scoreLine').textContent = score.you + ' : ' + score.raju;
+      $('scoreDraw').textContent = score.draw;
+    }
+    function place(i, mark) {
+      G.board[i] = mark;
+      const c = cells[i];
+      c.textContent = mark;
+      c.classList.add('filled', mark === 'X' ? 'mark-x' : 'mark-o');
+      haptic('medium');
+    }
+    function newMatch() {
+      clearTimeout(G.timer);
+      G.board = Game.emptyBoard();
+      G.finished = false;
+      G.busy = false;
+      cells.forEach((c) => { c.textContent = ''; c.className = 'cell'; });
+      $('resultModal').hidden = true;
+      setTurn(true);
+    }
+    function stopGame() {
+      clearTimeout(G.timer);
+      G.finished = true;
+      G.busy = false;
+      $('resultModal').hidden = true;
+    }
+    function checkEnd() {
+      const r = Game.evaluate(G.board);
+      if (r.winner || r.isDraw) { finish(r); return true; }
+      return false;
+    }
+    function onCell(i) {
+      if (G.finished || G.busy || G.board[i]) return;
+      place(i, 'X');
+      if (checkEnd()) return;
+      G.busy = true;
+      setTurn(false);
+      G.timer = setTimeout(() => {
+        if (G.finished) return;
+        place(Game.bestMove(G.board, 'O', 'X'), 'O');
+        G.busy = false;
+        if (!checkEnd()) setTurn(true);
+      }, 750);
+    }
+    function finish(r) {
+      G.finished = true;
+      G.busy = false;
+      if (r.line) r.line.forEach((i) => cells[i].classList.add('win-cell'));
+      $('chipMe').classList.remove('active');
+      $('chipRaju').classList.remove('active');
+      $('turn').classList.remove('mine');
+      $('turn').textContent = '';
+      boardEl.classList.remove('waiting');
+
+      const mark = $('resultMark');
+      if (r.winner === 'X') {
+        score.you++; notify('success');
+        mark.className = 'result-mark x'; mark.textContent = 'X';
+        $('resultTitle').textContent = 'Aap jeet gaye!';
+        $('resultSub').textContent = 'Shandaar khel, Raju bhi maan gaye.';
+      } else if (r.winner === 'O') {
+        score.raju++; notify('error');
+        mark.className = 'result-mark o'; mark.textContent = 'O';
+        $('resultTitle').textContent = 'Raju jeet gaye';
+        $('resultSub').textContent = 'Agli baar zaroor, ek aur match?';
+      } else {
+        score.draw++; notify('warning');
+        mark.className = 'result-mark d'; mark.textContent = '=';
+        $('resultTitle').textContent = 'Match draw';
+        $('resultSub').textContent = 'Barabar ki takkar rahi.';
+      }
+      renderScore();
+      G.timer = setTimeout(() => { if (openStack.includes('sheetGame')) $('resultModal').hidden = false; }, 550);
+    }
+
+    function openGame() {
+      haptic('medium');
+      newMatch();
+      openSheet('sheetGame');
+    }
+    $('openGame').addEventListener('click', (e) => { e.stopPropagation(); openGame(); });
+    $('playRow').addEventListener('click', openGame);
+    $('restartBtn').addEventListener('click', () => { haptic('light'); newMatch(); });
+    $('playAgainBtn').addEventListener('click', () => { haptic('light'); newMatch(); });
+    $('backProfileBtn').addEventListener('click', () => { $('resultModal').hidden = true; closeTopSheet(); });
+
+    /* =========================================================
+       Boot
+       ========================================================= */
+    async function boot() {
+      const myName = tgUser ? [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') : 'Guest';
+      $('greeting').textContent = greetingText();
+      $('meName').textContent = myName;
+      $('profileHandle').textContent = CONFIG.PROFILE_HANDLE;
+      fillAvatar($('meAvatar'), myName, tgUser && tgUser.photo_url);
+      fillAvatar($('youAvatar'), myName, tgUser && tgUser.photo_url);
+      renderScore();
+
+      if (!initData) {
+        $('notice').textContent = 'Ye profile Telegram ke andar kholein, tabhi aap follower ban payenge.';
+        $('notice').hidden = false;
+        $('followersPreview').textContent = 'Telegram se open karein';
+        return;
+      }
+
+      try {
+        const data = await api('/api/auth', { method: 'POST' });
+        renderStats(data.stats);
+      } catch (e) {
+        $('notice').textContent = 'Server se connect nahi ho paya. Thodi der baad dobara kholein.';
+        $('notice').hidden = false;
+      }
+      loadFollowers('');
+    }
+
+    boot();
+  })();
+  </script>
+</body>
+</html>
