@@ -324,7 +324,7 @@
       </p>
       <div class="actions">
         <button class="btn primary" id="followBtn">Following</button>
-        <button class="btn ghost" id="messageBtn">Message</button>
+        <button class="btn ghost" id="addGroupBtn">➕ Add to Group</button>
       </div>
     </section>
 
@@ -788,11 +788,20 @@
        Profile buttons
        ========================================================= */
     $('followBtn').addEventListener('click', () => { haptic('light'); toast('Aap Raju Rangila ko follow kar rahe hain'); });
-    $('messageBtn').addEventListener('click', () => {
-      haptic('light');
-      if (tg && tg.openTelegramLink) tg.openTelegramLink(CONFIG.BOT_LINK);
-      else window.open(CONFIG.BOT_LINK, '_blank');
-    });
+    $('addGroupBtn').addEventListener('click', () => {
+  haptic('medium');
+
+  if (tg && tg.openTelegramLink) {
+    tg.openTelegramLink(
+      'https://t.me/RajuRangilaBot?startgroup=true'
+    );
+  } else {
+    window.open(
+      'https://t.me/RajuRangilaBot?startgroup=true',
+      '_blank'
+    );
+  }
+});
 
     /* =========================================================
        Tic Tac Toe (fullscreen)
