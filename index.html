@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Raju Rangila</title>
+
+  <!-- Profile photo ko sabse pehle load karna shuru karo (redirect ke bina direct raw URL) -->
+  <link rel="preconnect" href="https://raw.githubusercontent.com" crossorigin>
+  <link rel="preload" as="image" href="https://raw.githubusercontent.com/abhishyk/rajurangila/main/secureos%20pr%20form.jpg" fetchpriority="high">
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,6 +59,19 @@
     .av-48 { width: 48px; height: 48px; font-size: 17px; }
     .av-30 { width: 30px; height: 30px; font-size: 12px; }
 
+    /* Raju ki photo: jab tak load na ho, "RR" placeholder dikhta hai, phir photo fade-in */
+    .raju-pic {
+      position: relative; overflow: hidden; border-radius: 50%; flex: none;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, #5b3f22 0%, #241a12 100%);
+      color: #f6e2b8; font-weight: 800; letter-spacing: .5px;
+    }
+    .raju-pic img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+      opacity: 0; transition: opacity .35s ease;
+    }
+    .raju-pic img.loaded { opacity: 1; }
+
     /* ---------- Welcome bar ---------- */
     .topbar {
       position: sticky; top: 0; z-index: 20;
@@ -74,10 +92,7 @@
       flex: none; padding: 3px; border-radius: 50%;
       background: conic-gradient(from 210deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34);
     }
-    .ring img {
-      width: 84px; height: 84px; border-radius: 50%; object-fit: cover; display: block;
-      border: 3px solid var(--card); background: var(--soft);
-    }
+    .ring .raju-pic { width: 90px; height: 90px; border: 3px solid var(--card); font-size: 26px; }
     .ig-stats { flex: 1; display: grid; grid-template-columns: 1fr 1fr; text-align: center; }
     .ig-stat { padding: 6px 0; border-radius: 12px; text-align: center; }
     .ig-stat b { display: block; font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -202,9 +217,9 @@
     .game-header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 6px 0; }
     .chip { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; }
     .chip.opp { flex-direction: row-reverse; text-align: right; }
-    .chip .avatar, .chip .raju { transition: box-shadow .25s ease, transform .25s ease; }
-    .chip .raju { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; }
-    .chip.active .avatar, .chip.active .raju {
+    .chip .avatar, .chip .raju-pic { transition: box-shadow .25s ease, transform .25s ease; }
+    .chip .raju-pic { width: 40px; height: 40px; font-size: 14px; }
+    .chip.active .avatar, .chip.active .raju-pic {
       box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent), 0 0 16px color-mix(in srgb, var(--accent) 55%, transparent);
       transform: scale(1.06);
     }
@@ -307,7 +322,15 @@
     <!-- ===== Profile ===== -->
     <section class="card profile">
       <div class="ig-top">
-        <div class="ring"><img src="https://github.com/abhishyk/rajurangila/blob/main/secureos%20pr%20form.jpg?raw=true" alt="Raju Rangila"></div>
+        <div class="ring">
+          <div class="raju-pic">
+            <span>RR</span>
+            <img id="profilePhoto" class="raju-photo"
+                 src="https://raw.githubusercontent.com/abhishyk/rajurangila/main/secureos%20pr%20form.jpg"
+                 alt="Raju Rangila" width="84" height="84"
+                 fetchpriority="high" decoding="async">
+          </div>
+        </div>
         <div class="ig-stats">
           <div class="ig-stat"><b id="statShayari">0</b><span>Shayari</span></div>
           <button class="ig-stat" id="statFollowersBtn"><b id="statFollowers">0</b><span>Followers</span></button>
@@ -404,7 +427,10 @@
         </div>
         <div class="vs"><b id="scoreLine">0 : 0</b>VS</div>
         <div class="chip opp" id="chipRaju">
-          <img class="raju" src="raju.jpg" alt="">
+          <div class="raju-pic">
+            <span>R</span>
+            <img id="chipPhoto" class="raju-photo" alt="" width="40" height="40" decoding="async">
+          </div>
           <div style="min-width:0">
             <div class="chip-name">Raju</div>
             <div class="chip-mark o">O</div>
@@ -450,7 +476,14 @@
       // (jaise 'https://raju-rangila.yourname.workers.dev'). Same domain par ho to ''.
       API_BASE: 'https://raju-rangila-bot.abhishekhaldkar3.workers.dev',
       BOT_LINK: 'https://t.me/RajuRangilaBot',
-      PROFILE_HANDLE: '@RajuRangilaBot'
+      PROFILE_HANDLE: '@RajuRangilaBot',
+      // Raju ki photo: pehla URL fail ho to agla try hoga.
+      // Best: photo ko ~300x300 WebP (30-50 KB) bana kar apne mini app ke saath host karein
+      // aur uska path sabse upar daal dein, jaise 'raju.webp'.
+      RAJU_PHOTOS: [
+        'https://raw.githubusercontent.com/abhishyk/rajurangila/main/secureos%20pr%20form.jpg',
+        'https://cdn.jsdelivr.net/gh/abhishyk/rajurangila@main/secureos%20pr%20form.jpg'
+      ]
     };
 
     /* =========================================================
@@ -483,8 +516,8 @@
       bestMove(board, computerMark, humanMark) {
         const moves = this.availableMoves(board);
         if (moves.length === 9) {
-          const openings = [0, 2, 4, 6, 8];
-          return openings[Math.floor(Math.random() * openings.length)];
+          // Raju pehle chal rahe hain: random opening
+          return moves[Math.floor(Math.random() * moves.length)];
         }
         if (Math.random() < this.MISTAKE_CHANCE) {
           return moves[Math.floor(Math.random() * moves.length)];
@@ -534,6 +567,25 @@
     const haptic = (t) => { try { tg && tg.HapticFeedback.impactOccurred(t || 'light'); } catch (e) {} };
     const notify = (t) => { try { tg && tg.HapticFeedback.notificationOccurred(t); } catch (e) {} };
 
+    /* ---------- Raju ki photo: placeholder -> fade-in, fail par fallback URL ---------- */
+    function loadRajuPhoto(img) {
+      const urls = CONFIG.RAJU_PHOTOS;
+      let idx = Math.max(0, urls.indexOf(img.getAttribute('src')));
+      const done = () => img.classList.add('loaded');
+      const fail = () => {
+        idx++;
+        if (idx < urls.length) img.src = urls[idx];
+        else img.remove(); // sab fail: "RR" placeholder hi dikhega
+      };
+      img.onload = done;
+      img.onerror = fail;
+      if (!img.getAttribute('src')) { img.src = urls[0]; return; }
+      // Script chalne se pehle hi image load/fail ho chuki ho sakti hai
+      if (img.complete) { img.naturalWidth ? done() : fail(); }
+    }
+    loadRajuPhoto($('profilePhoto'));
+    loadRajuPhoto($('chipPhoto'));
+
     const PALETTE = ['#e17076', '#7bc862', '#e5ca77', '#65aadd', '#a695e7', '#ee7aae', '#6ec9cb', '#faa774'];
     function colorFor(seed) {
       let h = 0;
@@ -553,6 +605,7 @@
         const img = document.createElement('img');
         img.alt = '';
         img.loading = 'lazy';
+        img.decoding = 'async';
         img.referrerPolicy = 'no-referrer';
         img.onerror = fallback;
         img.src = photoUrl;
@@ -789,19 +842,11 @@
        ========================================================= */
     $('followBtn').addEventListener('click', () => { haptic('light'); toast('Aap Raju Rangila ko follow kar rahe hain'); });
     $('addGroupBtn').addEventListener('click', () => {
-  haptic('medium');
-
-  if (tg && tg.openTelegramLink) {
-    tg.openTelegramLink(
-      'https://t.me/RajuRangilaBot?startgroup=true'
-    );
-  } else {
-    window.open(
-      'https://t.me/RajuRangilaBot?startgroup=true',
-      '_blank'
-    );
-  }
-});
+      haptic('medium');
+      const link = CONFIG.BOT_LINK + '?startgroup=true';
+      if (tg && tg.openTelegramLink) tg.openTelegramLink(link);
+      else window.open(link, '_blank');
+    });
 
     /* =========================================================
        Tic Tac Toe (fullscreen)
@@ -838,14 +883,32 @@
       c.classList.add('filled', mark === 'X' ? 'mark-x' : 'mark-o');
       haptic('medium');
     }
-    function newMatch() {
+    function rajuMove() {
+      if (G.finished) return;
+      place(Game.bestMove(G.board, 'O', 'X'), 'O');
+      G.busy = false;
+      if (!checkEnd()) setTurn(true);
+    }
+    // firstMoveDelay: Raju pehle chale to kitni der baad move kare (ms)
+    function newMatch(firstMoveDelay) {
       clearTimeout(G.timer);
       G.board = Game.emptyBoard();
       G.finished = false;
       G.busy = false;
       cells.forEach((c) => { c.textContent = ''; c.className = 'cell'; });
       $('resultModal').hidden = true;
-      setTurn(true);
+
+      // Har match me random: kabhi aap pehle, kabhi Raju
+      const rajuFirst = Math.random() < 0.5;
+      if (rajuFirst) {
+        G.busy = true;
+        setTurn(false);
+        $('turn').textContent = 'Raju pehle chal rahe hain...';
+        G.timer = setTimeout(rajuMove, firstMoveDelay || 1200);
+      } else {
+        setTurn(true);
+        $('turn').textContent = 'Aap pehle chaliye';
+      }
     }
     function stopGame() {
       clearTimeout(G.timer);
@@ -864,12 +927,7 @@
       if (checkEnd()) return;
       G.busy = true;
       setTurn(false);
-      G.timer = setTimeout(() => {
-        if (G.finished) return;
-        place(Game.bestMove(G.board, 'O', 'X'), 'O');
-        G.busy = false;
-        if (!checkEnd()) setTurn(true);
-      }, 750);
+      G.timer = setTimeout(rajuMove, 750);
     }
     function finish(r) {
       G.finished = true;
@@ -904,13 +962,15 @@
 
     function openGame() {
       haptic('medium');
-      newMatch();
+      // Game screen slide-in (0.3s) poora hone ke baad user ko board dekhne ka time milega,
+      // phir Raju ka pehla move aayega
+      newMatch(1800);
       openSheet('sheetGame');
     }
     $('openGame').addEventListener('click', (e) => { e.stopPropagation(); openGame(); });
     $('playRow').addEventListener('click', openGame);
-    $('restartBtn').addEventListener('click', () => { haptic('light'); newMatch(); });
-    $('playAgainBtn').addEventListener('click', () => { haptic('light'); newMatch(); });
+    $('restartBtn').addEventListener('click', () => { haptic('light'); newMatch(1200); });
+    $('playAgainBtn').addEventListener('click', () => { haptic('light'); newMatch(1300); });
     $('backProfileBtn').addEventListener('click', () => { $('resultModal').hidden = true; closeTopSheet(); });
 
     /* =========================================================
