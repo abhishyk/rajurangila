@@ -428,7 +428,7 @@
         <div class="vs"><b id="scoreLine">0 : 0</b>VS</div>
         <div class="chip opp" id="chipRaju">
           <div class="raju-pic">
-            <span>R</span>
+            <span>RR</span>
             <img id="chipPhoto" class="raju-photo" alt="" width="40" height="40" decoding="async">
           </div>
           <div style="min-width:0">
@@ -568,23 +568,40 @@
     const notify = (t) => { try { tg && tg.HapticFeedback.notificationOccurred(t); } catch (e) {} };
 
     /* ---------- Raju ki photo: placeholder -> fade-in, fail par fallback URL ---------- */
-    function loadRajuPhoto(img) {
+    // Profile wali photo ek hi baar load hoti hai; load hote hi wahi photo game chip me bhi lag jaati hai
+    function showPhoto(img, src) {
+      const show = () => {
+        img.classList.add('loaded');
+        const ph = img.parentElement.querySelector('span');
+        if (ph) ph.style.visibility = 'hidden'; // placeholder letter chhupa do
+      };
+      if (src && img.getAttribute('src') !== src) {
+        img.onload = show;
+        img.src = src;
+        if (img.complete && img.naturalWidth) show();
+      } else {
+        show();
+      }
+    }
+    (function loadRajuPhoto() {
+      const main = $('profilePhoto');
+      const chip = $('chipPhoto');
       const urls = CONFIG.RAJU_PHOTOS;
-      let idx = Math.max(0, urls.indexOf(img.getAttribute('src')));
-      const done = () => img.classList.add('loaded');
+      let idx = Math.max(0, urls.indexOf(main.getAttribute('src')));
+      const done = () => {
+        const src = main.currentSrc || main.src;
+        showPhoto(main);
+        showPhoto(chip, src);
+      };
       const fail = () => {
         idx++;
-        if (idx < urls.length) img.src = urls[idx];
-        else img.remove(); // sab fail: "RR" placeholder hi dikhega
+        if (idx < urls.length) main.src = urls[idx];
       };
-      img.onload = done;
-      img.onerror = fail;
-      if (!img.getAttribute('src')) { img.src = urls[0]; return; }
+      main.onload = done;
+      main.onerror = fail;
       // Script chalne se pehle hi image load/fail ho chuki ho sakti hai
-      if (img.complete) { img.naturalWidth ? done() : fail(); }
-    }
-    loadRajuPhoto($('profilePhoto'));
-    loadRajuPhoto($('chipPhoto'));
+      if (main.complete) { main.naturalWidth ? done() : fail(); }
+    })();
 
     const PALETTE = ['#e17076', '#7bc862', '#e5ca77', '#65aadd', '#a695e7', '#ee7aae', '#6ec9cb', '#faa774'];
     function colorFor(seed) {
