@@ -879,7 +879,7 @@
       cells.push(c);
     }
 
-    const G = { board: Game.emptyBoard(), finished: true, busy: false, timer: null };
+    const G = { board: Game.emptyBoard(), finished: true, busy: false, timer: null, lastRajuFirst: null, streak: 0 };
     const score = { you: 0, raju: 0, draw: 0 };
 
     function setTurn(mine) {
@@ -915,8 +915,12 @@
       cells.forEach((c) => { c.textContent = ''; c.className = 'cell'; });
       $('resultModal').hidden = true;
 
-      // Har match me random: kabhi aap pehle, kabhi Raju
-      const rajuFirst = Math.random() < 0.5;
+      // Har match me random: kabhi aap pehle, kabhi Raju.
+      // Ek hi player lagatar 2 se zyada baar pehle nahi chalega.
+      let rajuFirst = Math.random() < 0.5;
+      if (G.streak >= 2 && rajuFirst === G.lastRajuFirst) rajuFirst = !rajuFirst;
+      G.streak = rajuFirst === G.lastRajuFirst ? G.streak + 1 : 1;
+      G.lastRajuFirst = rajuFirst;
       if (rajuFirst) {
         G.busy = true;
         setTurn(false);
